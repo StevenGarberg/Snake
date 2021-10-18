@@ -8,7 +8,7 @@
         <div class="game-board-row">
             @for (var j = 0; j < 40; j++)
             {
-                var boardState = Board[i][j];
+                var boardState = _board[i][j];
                 if (boardState == null)
                 {
                     <span class="game-board-cell">&nbsp;</span>
@@ -26,29 +26,52 @@
     }
 </div>
 
-<button class="btn btn-primary" @onclick="() => { MoveSnake(Direction.Right); }">Go Right</button>
-<button class="btn btn-primary" @onclick="() => { MoveSnake(Direction.Left); }">Go Left</button>
-<button class="btn btn-primary" @onclick="() => { MoveSnake(Direction.Up); }">Go Up</button>
-<button class="btn btn-primary" @onclick="() => { MoveSnake(Direction.Down); }">Go Down</button>
+<button class="btn btn-primary" @onclick="() => { ChangeDirection(Direction.Right); }">Go Right</button>
+<button class="btn btn-primary" @onclick="() => { ChangeDirection(Direction.Left); }">Go Left</button>
+<button class="btn btn-primary" @onclick="() => { ChangeDirection(Direction.Up); }">Go Up</button>
+<button class="btn btn-primary" @onclick="() => { ChangeDirection(Direction.Down); }">Go Down</button>
 
 @code {
     private enum BoardState { Snake, Food }
     private enum Direction { Right, Left, Up, Down }
 
-    private BoardState?[][] Board { get; set; } = new BoardState?[40][];
-    private (int i, int j) PlayerHead { get; set; } = new(20, 20);
+    private BoardState?[][] _board = new BoardState?[40][];
+    private List<(int i, int j)> _snake = new();
+    private Direction _currentDirection = Direction.Right;
+    private bool _gameOver;
 
     protected override void OnInitialized()
     {
+        _snake.Add(new(20, 20));
+        
         for (var i = 0; i < 40; i++)
         {
-            Board[i] = new BoardState?[40];
+            _board[i] = new BoardState?[40];
         }
 
-        Board[20][20] = BoardState.Snake;
+        _board[20][20] = BoardState.Snake;
         PlaceFood();
+        GameLoop();
     }
 
+    private async Task GameLoop()
+    {
+        while (!_gameOver)
+        {
+            await Task.Delay(250);
+            try
+            {
+                MoveSnake();
+            }
+            catch
+            {
+                _gameOver = true;
+                Console.WriteLine("Game over!");
+            }
+            StateHasChanged();
+        }
+    }
+    
     private void PlaceFood()
     {
         var potentialSpots = new List<(int x, int y)>();
@@ -56,38 +79,60 @@
         {
             for (var j = 0; j < 40; j++)
             {
-                if (Board[i][j] == null)
+                if (_board[i][j] == null)
                     potentialSpots.Add((i, j));
             }
         }
         var randomIndex = new Random().Next(0, potentialSpots.Count);
         var randomSpot = potentialSpots[randomIndex];
         
-        Board[randomSpot.x][randomSpot.y] = BoardState.Food;
+        _board[randomSpot.x][randomSpot.y] = BoardState.Food;
     }
 
-    private void MoveSnake(Direction direction)
+    private void ChangeDirection(Direction direction)
     {
-        (int i, int j) movement = (0, 0);
-        switch (direction)
+        _currentDirection = direction;
+    }
+    
+    private void MoveSnake()
+    {
+        (int i, int j) movement = _currentDirection switch
         {
-            case Direction.Down:
-                movement = (1, 0);
-                break;
-            case Direction.Up:
-                movement = (-1, 0);
-                break;
-            case Direction.Right:
-                movement = (0, 1);
-                break;
-            case Direction.Left:
-                movement = (0, -1);
-                break;
-        }
+            Direction.Down => (1, 0),
+            Direction.Up => (-1, 0),
+            Direction.Right => (0, 1),
+            Direction.Left => (0, -1),
+            _ => (0, 0)
+        };
 
-        (int i, int j) newLocation = (PlayerHead.i + movement.i, PlayerHead.j + movement.j);
-        Board[newLocation.i][newLocation.j] = BoardState.Snake;
-        Board[PlayerHead.i][PlayerHead.j] = null;
-        PlayerHead = (newLocation.i, newLocation.j);
+        var playedHead = _snake[0];
+        (int i, int j) newLocation = (playedHead.i + movement.i, playedHead.j + movement.j);
+        
+        var currentItem = _board[newLocation.i][newLocation.j];
+        if (currentItem == BoardState.Food)
+        {
+            _board[newLocation.i][newLocation.j] = BoardState.Snake;
+            _snake.Insert(0, (newLocation.i, newLocation.j));
+            PlaceFood();
+        }
+        else if (currentItem == BoardState.Snake)
+        {
+            _gameOver = true;
+            Console.WriteLine("Game over!");
+        }
+        else
+        {
+            var lastPosition = _snake[0];
+            _board[_snake[0].i][_snake[0].j] = null;
+            _snake[0] = (newLocation.i, newLocation.j);
+            _board[newLocation.i][newLocation.j] = BoardState.Snake;
+            
+            for (var i = 1; i < _snake.Count; i++)
+            {
+                _board[_snake[i].i][_snake[i].j] = null;
+                (_snake[i], lastPosition) = (lastPosition, _snake[i]);
+                _board[_snake[i].i][_snake[i].j] = BoardState.Snake;
+            }
+        }
     }
 }
