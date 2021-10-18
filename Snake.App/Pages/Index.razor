@@ -1,0 +1,93 @@
+﻿@page "/"
+
+<h1>Snake</h1>
+
+<div class="game-board">
+    @for (var i = 0; i < 40; i++)
+    {
+        <div class="game-board-row">
+            @for (var j = 0; j < 40; j++)
+            {
+                var boardState = Board[i][j];
+                if (boardState == null)
+                {
+                    <span class="game-board-cell">&nbsp;</span>
+                }
+                else if (boardState == BoardState.Snake)
+                {
+                    <span class="game-board-cell snake">&nbsp;</span>
+                }
+                else if (boardState == BoardState.Food)
+                {
+                    <span class="game-board-cell food">&nbsp;</span>
+                }
+            }
+        </div>
+    }
+</div>
+
+<button class="btn btn-primary" @onclick="() => { MoveSnake(Direction.Right); }">Go Right</button>
+<button class="btn btn-primary" @onclick="() => { MoveSnake(Direction.Left); }">Go Left</button>
+<button class="btn btn-primary" @onclick="() => { MoveSnake(Direction.Up); }">Go Up</button>
+<button class="btn btn-primary" @onclick="() => { MoveSnake(Direction.Down); }">Go Down</button>
+
+@code {
+    private enum BoardState { Snake, Food }
+    private enum Direction { Right, Left, Up, Down }
+
+    private BoardState?[][] Board { get; set; } = new BoardState?[40][];
+    private (int i, int j) PlayerHead { get; set; } = new(20, 20);
+
+    protected override void OnInitialized()
+    {
+        for (var i = 0; i < 40; i++)
+        {
+            Board[i] = new BoardState?[40];
+        }
+
+        Board[20][20] = BoardState.Snake;
+        PlaceFood();
+    }
+
+    private void PlaceFood()
+    {
+        var potentialSpots = new List<(int x, int y)>();
+        for (var i = 0; i < 40; i++)
+        {
+            for (var j = 0; j < 40; j++)
+            {
+                if (Board[i][j] == null)
+                    potentialSpots.Add((i, j));
+            }
+        }
+        var randomIndex = new Random().Next(0, potentialSpots.Count);
+        var randomSpot = potentialSpots[randomIndex];
+        
+        Board[randomSpot.x][randomSpot.y] = BoardState.Food;
+    }
+
+    private void MoveSnake(Direction direction)
+    {
+        (int i, int j) movement = (0, 0);
+        switch (direction)
+        {
+            case Direction.Down:
+                movement = (1, 0);
+                break;
+            case Direction.Up:
+                movement = (-1, 0);
+                break;
+            case Direction.Right:
+                movement = (0, 1);
+                break;
+            case Direction.Left:
+                movement = (0, -1);
+                break;
+        }
+
+        (int i, int j) newLocation = (PlayerHead.i + movement.i, PlayerHead.j + movement.j);
+        Board[newLocation.i][newLocation.j] = BoardState.Snake;
+        Board[PlayerHead.i][PlayerHead.j] = null;
+        PlayerHead = (newLocation.i, newLocation.j);
+    }
+}
