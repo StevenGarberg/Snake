@@ -2,48 +2,65 @@
 
 <h1>Snake</h1>
 
-<div class="game-board">
-    @for (var i = 0; i < 40; i++)
+<div @ref="gameContainer" tabindex="0" @onkeydown="KeyboardEventHandler">
+    @if (_gameOver == false)
     {
-        <div class="game-board-row">
-            @for (var j = 0; j < 40; j++)
+        <div class="game-board">
+            @for (var i = 0; i < 40; i++)
             {
-                var boardState = _board[i][j];
-                if (boardState == null)
-                {
-                    <span class="game-board-cell">&nbsp;</span>
-                }
-                else if (boardState == BoardState.Snake)
-                {
-                    <span class="game-board-cell snake">&nbsp;</span>
-                }
-                else if (boardState == BoardState.Food)
-                {
-                    <span class="game-board-cell food">&nbsp;</span>
-                }
+                <div class="game-board-row">
+                    @for (var j = 0; j < 40; j++)
+                    {
+                        var boardState = _board[i][j];
+                        if (boardState == null)
+                        {
+                            <span class="game-board-cell">&nbsp;</span>
+                        }
+                        else if (boardState == BoardState.Snake)
+                        {
+                            <span class="game-board-cell snake">&nbsp;</span>
+                        }
+                        else if (boardState == BoardState.Food)
+                        {
+                            <span class="game-board-cell food">&nbsp;</span>
+                        }
+                    }
+                </div>
             }
         </div>
+    
+        <button class="btn btn-primary" @onclick="() => { ChangeDirection(Direction.Right); }">Go Right</button>
+        <button class="btn btn-primary" @onclick="() => { ChangeDirection(Direction.Left); }">Go Left</button>
+        <button class="btn btn-primary" @onclick="() => { ChangeDirection(Direction.Up); }">Go Up</button>
+        <button class="btn btn-primary" @onclick="() => { ChangeDirection(Direction.Down); }">Go Down</button>
+    }
+    else
+    {
+        if (_gameOver == true)
+        {
+            <p>Game over!</p>
+        }
+        <button class="btn btn-success" @onclick="async () => { await Start(); } ">Start Game</button>
     }
 </div>
-
-<button class="btn btn-primary" @onclick="() => { ChangeDirection(Direction.Right); }">Go Right</button>
-<button class="btn btn-primary" @onclick="() => { ChangeDirection(Direction.Left); }">Go Left</button>
-<button class="btn btn-primary" @onclick="() => { ChangeDirection(Direction.Up); }">Go Up</button>
-<button class="btn btn-primary" @onclick="() => { ChangeDirection(Direction.Down); }">Go Down</button>
 
 @code {
     private enum BoardState { Snake, Food }
     private enum Direction { Right, Left, Up, Down }
 
-    private BoardState?[][] _board = new BoardState?[40][];
-    private List<(int i, int j)> _snake = new();
-    private Direction _currentDirection = Direction.Right;
-    private bool _gameOver;
-
-    protected override void OnInitialized()
+    private ElementReference gameBoardElement, gameContainer;
+    private BoardState?[][] _board;
+    private List<(int i, int j)> _snake;
+    private Direction _currentDirection;
+    private bool? _gameOver;
+    
+    private async Task Start()
     {
-        _snake.Add(new(20, 20));
-        
+        _board = new BoardState?[40][];
+        _snake = new List<(int i, int j)> { new(20, 20) };
+        _currentDirection = Direction.Right;
+        _gameOver = false;
+
         for (var i = 0; i < 40; i++)
         {
             _board[i] = new BoardState?[40];
@@ -51,19 +68,20 @@
 
         _board[20][20] = BoardState.Snake;
         PlaceFood();
+        await gameContainer.FocusAsync();
         GameLoop();
     }
 
     private async Task GameLoop()
     {
-        while (!_gameOver)
+        while (_gameOver == false)
         {
             await Task.Delay(250);
             try
             {
                 MoveSnake();
             }
-            catch
+            catch(Exception e)
             {
                 _gameOver = true;
                 Console.WriteLine("Game over!");
@@ -92,6 +110,31 @@
     private void ChangeDirection(Direction direction)
     {
         _currentDirection = direction;
+    }
+
+    private void KeyboardEventHandler(KeyboardEventArgs args)
+    {
+        switch (args.Key)
+        {
+            default:
+                return;
+            case "a":
+            case "ArrowLeft":
+                _currentDirection = Direction.Left;
+                break;
+            case "d":
+            case "ArrowRight":
+                _currentDirection = Direction.Right;
+                break;
+            case "w":
+            case "ArrowUp":
+                _currentDirection = Direction.Up;
+                break;
+            case "s":
+            case "ArrowDown":
+                _currentDirection = Direction.Down;
+                break;
+        }
     }
     
     private void MoveSnake()
