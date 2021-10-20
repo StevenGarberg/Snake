@@ -16,6 +16,7 @@ namespace Snake.App.Pages
         private List<(int i, int j)> _snake;
         private Direction _currentDirection;
         private bool? _gameOver;
+        private int _score;
         
         private async Task Start()
         {
@@ -23,6 +24,7 @@ namespace Snake.App.Pages
             _snake = new List<(int i, int j)> { new(20, 20) };
             _currentDirection = Direction.Right;
             _gameOver = false;
+            _score = 0;
 
             for (var i = 0; i < 40; i++)
             {
@@ -117,6 +119,7 @@ namespace Snake.App.Pages
             var currentItem = _board[newLocation.i][newLocation.j];
             if (currentItem == BoardState.Food)
             {
+                _score++;
                 _board[newLocation.i][newLocation.j] = BoardState.Snake;
                 _snake.Insert(0, (newLocation.i, newLocation.j));
                 PlaceFood();

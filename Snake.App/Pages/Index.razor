@@ -5,6 +5,8 @@
 <div @ref="gameContainer" tabindex="0" @onkeydown="KeyboardEventHandler">
     @if (_gameOver == false)
     {
+        <h2>Score: @_score</h2>
+        
         <div class="game-board">
             @for (var i = 0; i < 40; i++)
             {
@@ -39,6 +41,7 @@
         if (_gameOver == true)
         {
             <p>Game over!</p>
+            <p>Score: @_score</p>
         }
         <button class="btn btn-success" @onclick="async () => { await Start(); } ">Start Game</button>
     }
