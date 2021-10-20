@@ -41,7 +41,9 @@ namespace Snake.App.Pages
         {
             while (_gameOver == false)
             {
-                await Task.Delay(250);
+                var delayTime = 250 - (_score * 10);
+                if (delayTime < 50) delayTime = 50;
+                await Task.Delay(delayTime);
                 try
                 {
                     MoveSnake();
