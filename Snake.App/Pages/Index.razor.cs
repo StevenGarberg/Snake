@@ -10,8 +10,7 @@ namespace Snake.App.Pages
 {
     public partial class Index : ComponentBase
     {
-
-        private ElementReference gameBoardElement, gameContainer;
+        private ElementReference gameContainer;
         private BoardState?[][] _board;
         private List<(int i, int j)> _snake;
         private Direction _currentDirection;
