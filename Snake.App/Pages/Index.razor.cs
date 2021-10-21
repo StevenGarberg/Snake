@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Snake.App.Enums;
 
 namespace Snake.App.Pages
 {
     public partial class Index : ComponentBase
     {
-        private enum BoardState { Snake, Food }
-        private enum Direction { Right, Left, Up, Down }
 
         private ElementReference gameBoardElement, gameContainer;
         private BoardState?[][] _board;
