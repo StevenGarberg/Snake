@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Snake.App.Enums;
+#pragma warning disable 4014
 
 namespace Snake.App.Pages
 {
